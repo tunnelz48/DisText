@@ -4,6 +4,7 @@ from PIL import Image,ImageTk
 import math
 
 
+
 ## Class Answer Grid, Stores all relevant data for a solution/ expression
 
 class answerGrid:
@@ -21,7 +22,7 @@ class answerGrid:
         self.row = max(abs(math.floor((x1-x2)/self.thickness)),1)
         self.col = max(abs(math.floor((y1-y2)/self.height)),1)
         self.grid = [[""] * self.col] * self.row
-        print(self.grid)
+        #print(self.grid)
 
     def draw(self,canvas):
         
@@ -42,18 +43,38 @@ class answerGrid:
                 ycord = self.starty + (self.height*y)
                 #self.grid[x][y].configure(yscrollcommand=scroll.set)
                 canvas.create_window(xcord,ycord,window=self.grid[x][y],anchor=tk.NW)
+                self.grid[x][y].insert(tk.END, f"{x},{y}") 
                 #self.grid[x][y].place(x=xcord, y=ycord)
                 #print(x,y,"isfine")
 #test = tk.Text(worksheet, height=1, width=3, bg="red")
 #worksheet.create_window(10,10,window=test)
 
+    
+    #iterate through the grid and destroy the textboxes
+    def delete_grid (self):
+        print(self.grid[0][0])
+        
+        for x in range(len(self.grid)):
+            for y in range(len(self.grid[x])):
+                print(x,y,"destroy")
+                self.grid[x][y].destroy()
+        
+        self.grid[0][0].destroy()
+        #self.grid[1][1].destroy()
+        #self.grid[2][0].destroy()
+        #self.grid[1][0].destroy()
+        
+        
 
 
+## An array that holds all the grids so they can be referenced and deleted
+stored_grids = []
 
-
-
-
-
+def delete_last_grid():
+    print("we ran")
+    if len(stored_grids) > 0:
+        stored_grids[0].delete_grid()
+        stored_grids.pop(0)
 
 ##make window##
 window = tk.Tk()
@@ -80,10 +101,11 @@ def save_as_png(canvas,fileName):
 
 
 
+
 ##menu bar top##
 MenuFrame = tk.Frame(window)
 MenuFrame.place(x=0,y=0)
-file = tk.Button(MenuFrame, text="File")
+file = tk.Button(MenuFrame, text="Delete Last Grid", command=delete_last_grid)
 file.pack(side="left", padx=4)
 Edit = tk.Button(MenuFrame, text="Edit")
 Edit.pack(side="left", padx=4)
@@ -212,6 +234,7 @@ def endDraw(event):
     #if abs(x1-x2) > 20 and abs(y1-y2) > 20:
         #worksheet.create_rectangle(x1,y1,x2,y2, fill=color,outline=color)
     temp = answerGrid(x1,y1,x2,y2)
+    stored_grids.insert(0,temp)
     temp.draw(worksheet)
 
 worksheet.bind('<Button-1>', startDraw)
