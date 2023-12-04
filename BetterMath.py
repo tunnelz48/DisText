@@ -3,12 +3,13 @@ import tkinter as tk
 from PIL import Image,ImageTk
 import math
 
-
+## Default button bindings
+infinite = "<Shift-i>"
 
 ## Class Answer Grid, Stores all relevant data for a solution/ expression
 
 class answerGrid:
-    thickness = 64
+    thickness = 30
     height =  48
     fontsize = 30
     row = 0
@@ -23,6 +24,58 @@ class answerGrid:
         self.col = max(abs(math.floor((y1-y2)/self.height)),1)
         self.grid = [[""] * self.col] * self.row
         #print(self.grid)
+
+    #Capture and manage the keypress
+    def key_press(self, event):
+        print("ran")
+        print(event.char)
+        #take a look at some variables to maybe use for movement
+        '''print(event.widget.__dict__)
+            for x in self.grid:
+                for y in x:
+                    print(y.tk)'''
+        print(event)
+        #god forgive me for this yandere dev if elif nonsense. I hope i figure out a better situation at some opint
+        #movement section
+        if event.char == "a":
+            temp = event.widget
+            for x in range(self.col):
+                temp = temp.tk_focusPrev()
+            temp.focus()
+            return "break"
+        elif event.char == "d":
+            temp = event.widget
+            for x in range(self.col):
+                temp = temp.tk_focusNext()
+            temp.focus()
+            return "break"
+        elif event.char == "s":
+            event.widget.tk_focusNext().focus()
+            return "break"
+        elif event.char == "w":
+            event.widget.tk_focusPrev().focus()
+            return "break"
+        #Deleting and other values section
+        elif event.char == "\b":
+            print("backspace")
+        elif event.char == "":
+            print("special character")
+        #Symbols Section
+        elif event.char == "P":
+            event.widget.insert(tk.INSERT, "π")
+            return "break"
+        elif event.char == "R":
+            event.widget.insert(tk.INSERT, "√")
+            return "break"
+        else:
+            event.widget.insert(tk.INSERT, f"{event.char}")
+            temp = event.widget
+            for x in range(self.col):
+                temp = temp.tk_focusNext()
+            temp.focus()
+            return "break"
+        #return "break" removes default behavior 
+        #return "break"
 
     def draw(self,canvas):
         
@@ -43,12 +96,12 @@ class answerGrid:
                 ycord = self.starty + (self.height*y)
                 #self.grid[x][y].configure(yscrollcommand=scroll.set)
                 canvas.create_window(xcord,ycord,window=self.grid[x][y],anchor=tk.NW)
-                self.grid[x][y].insert(tk.END, f"{x},{y}") 
+                self.grid[x][y].bind('<Key>', self.key_press)
+                #self.grid[x][y].insert(tk.END, f"{x},{y}") 
                 #self.grid[x][y].place(x=xcord, y=ycord)
                 #print(x,y,"isfine")
 #test = tk.Text(worksheet, height=1, width=3, bg="red")
 #worksheet.create_window(10,10,window=test)
-
     
     #iterate through the grid and destroy the textboxes
     def delete_grid (self):
@@ -59,7 +112,7 @@ class answerGrid:
                 print(x,y,"destroy")
                 self.grid[x][y].destroy()
         
-        self.grid[0][0].destroy()
+        #self.grid[0][0].destroy()
         #self.grid[1][1].destroy()
         #self.grid[2][0].destroy()
         #self.grid[1][0].destroy()
