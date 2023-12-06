@@ -1,5 +1,6 @@
 
-import tkinter as tk
+from tkinter import *
+from tkinter import PhotoImage
 from tkinter.ttk import *
 from PIL import Image,ImageTk
 import math
@@ -11,18 +12,21 @@ infinite = "<Shift-i>"
 
 
 ##make window##
-window = tk.Tk()
+window = Tk()
 
 style = Style(window)
 #print(style.theme_names())
-style.theme_use("clam")
+style.theme_use("winnative")
+#style.configure("VisibleTextBox", borderwidth=3, background="#ce7e00")
+#style.configure("HiddenTextBox", borderwidth=0)
+
 
 screen_width= window.winfo_screenwidth()               
 screen_height= window.winfo_screenheight()               
 window.geometry("%dx%d" % (screen_width, screen_height))
 
 window.title("DisText")
-#tk.Text(window, justify='center')
+#Text(window, justify='center')
 
 
 
@@ -42,8 +46,8 @@ class answerGrid:
         self.endy = max([y1,y2])
         self.row = max(abs(math.floor((x1-x2)/self.thickness)),1)
         self.col = max(abs(math.floor((y1-y2)/self.height)),1)
-        self.grid = [[""] * self.col] * self.row
-        #print(self.grid)
+        self.grid = [["" for i in range(self.col)] for j in range(self.row)]
+        print(self.grid)
 
     #Capture and manage the keypress
     def key_press(self, event):
@@ -81,24 +85,24 @@ class answerGrid:
         elif event.char == "":
             print("special character")
         elif event.char == '\x16': #ctrl + v
-            event.widget.insert(tk.INSERT, window.clipboard_get())
+            event.widget.insert(INSERT, window.clipboard_get())
             return "break"
         #Symbols Section
         elif event.char == "P":
-            event.widget.insert(tk.INSERT, "𝝅")
+            event.widget.insert(INSERT, "𝝅")
             return "break"
         elif event.char == "R":
-            event.widget.insert(tk.INSERT, "√")
+            event.widget.insert(INSERT, "√")
             return "break"
         elif event.char == '\x06':
             #print(event.widget.get("1.0",'end-1c'))
             original_input = event.widget.get('1.0','end-1c')
-            event.widget.delete('1.0', tk.END)
+            event.widget.delete('1.0', END)
             event.widget.insert('1.0', f"\u0305{original_input}\u0305")
             #\u0305
             return "break"
         else:
-            event.widget.insert(tk.INSERT, f"{event.char}")
+            event.widget.insert(INSERT, f"{event.char}")
             temp = event.widget
             for x in range(self.col):
                 temp = temp.tk_focusNext()
@@ -115,34 +119,44 @@ class answerGrid:
             self.col = 1
         #if abs(self.startx - self.endx) > self.thickness and abs(self.starty-self.endy) > self.height:
         print("heyo", self.row, self.col)
-        #aframe = tk.Frame(canvas, bg="red")
+        #aframe = Frame(canvas, bg="red")
         #aframe.place(x=self.startx, y=self.starty, width=self.fontsize*self.row , height=self.fontsize*self.col)
         for x in range(self.row):
+            temp = NONE
             for y in range(self.col):
-                temp = tk.Text(canvas, height=1, width=1, padx=0, bg="white")
+                temp = Text(canvas, height=1, width=1, padx=0, bg="white")
                 self.grid[x][y] = temp 
+                #print("im crying", self.grid[x][y])
                 temp.tag_configure("center", justify='center')
                 temp.tag_add("center", 1.0, "end")
                 self.grid[x][y].config(font=('Arial', self.fontsize))
+                #temp.configure(style="VisibleTextBox")
                 #print(str(x),str(y))
                 xcord = self.startx + (self.thickness*x)
                 ycord = self.starty + (self.height*y)
                 #self.grid[x][y].configure(yscrollcommand=scroll.set)
-                canvas.create_window(xcord,ycord,window=self.grid[x][y],anchor=tk.NW)
+                canvas.create_window(xcord,ycord,window=self.grid[x][y],anchor=NW)
                 self.grid[x][y].bind('<Key>', self.key_press)
-                #self.grid[x][y].insert(tk.END, f"{x},{y}") 
+                
+                #self.grid[x][y].insert(END, f"{x},{y}") 
+                #print("im crying2", self.grid[x][y])
                 #self.grid[x][y].place(x=xcord, y=ycord)
                 #print(x,y,"isfine")
-#test = tk.Text(worksheet, height=1, width=3, bg="red")
+            #print("im crying3", self.grid)
+#test = Text(worksheet, height=1, width=3, bg="red")
 #worksheet.create_window(10,10,window=test)
-    
+        #print(self.grid)
+
+
+
     #iterate through the grid and destroy the textboxes
     def delete_grid (self):
-        print(self.grid[0][0])
+        #print(worksheet.__dict__)
+        #print(self.grid[0][0])
         
-        for x in range(len(self.grid)):
-            for y in range(len(self.grid[x])):
-                print(x,y,"destroy")
+        for x in range(self.row):
+            for y in range(self.col):
+                #print(x,y,"destroy")
                 self.grid[x][y].destroy()
         
         #self.grid[0][0].destroy()
@@ -150,7 +164,18 @@ class answerGrid:
         #self.grid[2][0].destroy()
         #self.grid[1][0].destroy()
         
+    def remove_borders(self):
+        for x in range(self.row):
+            for y in range(self.col):
+                print(self.grid[x][y].__dict__)
+                self.grid[x][y].configure(borderwidth=0)
+                #self.grid[x][y].insert(END, f"{x},{y}") 
+        #print("We removed the borders")
         
+    def add_borders(self):
+        for x in range(self.row):
+            for y in range(self.col):
+                self.grid[x][y].configure(borderwidth=2)
 
 
 ## An array that holds all the grids so they can be referenced and deleted
@@ -166,6 +191,9 @@ def delete_last_grid():
 def resize_for_save(canvas, frame):
     frame.config(height=1100)
     canvas.config(height=1100)
+    for x in stored_grids:
+        x.remove_borders()
+
     window.update()
 #Stolen from the internet <3
 
@@ -190,22 +218,22 @@ def save_as_png(canvas, frame, fileName):
 ##menu bar top##
 MenuFrame = Frame(window)
 MenuFrame.place(x=0,y=0)
-file = tk.Button(MenuFrame, text="Delete Last Grid", command=delete_last_grid)
-file.pack(side="left", padx=4)
-Edit = tk.Button(MenuFrame, text="Open")
-Edit.pack(side="left", padx=4)
-View = tk.Button(MenuFrame, text="Save", command= lambda: [resize_for_save(worksheet,work_area), save_as_png(worksheet,work_area,"sample")])
-View.pack(side="left", padx=4)
-Insert = tk.Button(MenuFrame, text="Insert")
-Insert.pack(side="left", padx=4)
+UndoBtn = Button(MenuFrame, text="Delete Last Grid", command=delete_last_grid)
+UndoBtn.pack(side="left", padx=4)
+OpenBtn = Button(MenuFrame, text="Open")
+OpenBtn.pack(side="left", padx=4)
+SaveBtn = Button(MenuFrame, text="Save", command= lambda: [resize_for_save(worksheet,work_area), save_as_png(worksheet,work_area,"sample")])
+SaveBtn.pack(side="left", padx=4)
+InsertBtn = Button(MenuFrame, text="Insert")
+InsertBtn.pack(side="left", padx=4)
 
 ##comand box##
 #Unclear on the functionality of this widget
-#CMD = tk.Entry(window)
+#CMD = Entry(window)
 #CMD.place(x=40,y=30, width=730)
 
 ##X cords##
-#XCords = tk.Frame(window)
+#XCords = Frame(window)
 #XCords.place(x=64, y=64)
 
 #max_x = 28
@@ -215,17 +243,17 @@ x = 1
 while x != 29:
     if x < 10:
         x = f'0{x}'
-    x1 = tk.Label(XCords,text=f'{x}', justify='center')
+    x1 = Label(XCords,text=f'{x}', justify='center')
     x1.pack(side='left')
     x = int(x)
     x += 1
 
 ##Y cords##
-YCords = tk.Frame(window)
+YCords = Frame(window)
 YCords.place(x=48, y=80)
 y = 1
 while y != 25:
-    y1 = tk.Label(YCords,text=f'{y}', justify='center')
+    y1 = Label(YCords,text=f'{y}', justify='center')
     y1.pack(side='top')
     y += 1
 '''
@@ -235,7 +263,7 @@ work_h = 700
 image_w = 850
 image_h = 1100
 
-work_area = tk.Frame(window, width=work_w , height=work_h, bg='red')
+work_area = Frame(window, width=work_w , height=work_h)
 work_area.place(x=int(work_w/3), y=100)
 
 ##Current Grid## 
@@ -269,22 +297,22 @@ initial_worksheet=  initial_worksheet.resize((image_w,image_h),Image.LANCZOS)
 worksheet_image = ImageTk.PhotoImage(initial_worksheet)
 
 
-worksheet = tk.Canvas(work_area, width=work_w , height=work_h,scroll='y', scrollregion=(0,0,0,image_h),  bg='green')
+worksheet = Canvas(work_area, width=work_w , height=work_h,scroll='y', scrollregion=(0,0,0,image_h),  bg='green')
 worksheet.place(x=0, y=0)
-#work_frame = tk.Frame(worksheet, bg="red")
+#work_frame = Frame(worksheet, bg="red")
 #work_frame.place(x=0,y=0, width=work_w , height=work_h,)
 
-worksheet.create_image(0,0,image=worksheet_image,anchor=tk.NW)
+worksheet.create_image(0,0,image=worksheet_image,anchor=NW)
 
 
 
-scroll = tk.Scrollbar(worksheet, orient = 'vertical', command=worksheet.yview)
+scroll = Scrollbar(worksheet, orient = 'vertical', command=worksheet.yview)
 scroll.place(relx=1, rely=0, relheight=1, anchor='ne')
 
 worksheet.configure(yscrollcommand=scroll.set)
 #create_page(30,39, worksheet)
 ##text box##
-#textbox = tk.Text(window, bg='light grey')
+#textbox = Text(window, bg='light grey')
 #textbox.place(x=64, y=80)
 
 
@@ -302,17 +330,17 @@ def toggle_grid_insert():
     print(gridInsert)
     gridInsert = not gridInsert 
     if gridInsert:
-        Insert.configure(text = "Stop Inserting")
+        InsertBtn.configure(text = "Stop Inserting")
     else:
-        Insert.configure(text = "Insert Grid")
+        InsertBtn.configure(text = "Insert Grid")
     
     
     print(gridInsert)   
 
 
 #This line helps while the file is a mess, clean up later
-Insert.configure(text = "Insert Grid", command=toggle_grid_insert)
-
+InsertBtn.configure(text = "Insert Grid", command=toggle_grid_insert)
+OpenBtn.configure(command=lambda: stored_grids[0].remove_borders())
 def start_draw(event):
     global upcomingZoneX 
     global upcomingZoneY
@@ -362,17 +390,17 @@ def create_grid(event=None):
     for i in range(0, h, int(h/max_y)):
         c.create_line([(0,i), (w, i)], tag='grid_lines')
     print(totalX)
-c = tk.Canvas(textbox, width=500, height=500)
-c.pack(fill=tk.BOTH)
+c = Canvas(textbox, width=500, height=500)
+c.pack(fill=BOTH)
 c.bind('<Configure>', create_grid)
 textbox.tkraise
 '''
 #A failed test to see if a frame would help
-#w = tk.Frame(worksheet)
+#w = Frame(worksheet)
 #w.place(x = 10, y = 10, height = 40, width = 40)
 #for x in range(4):
 #    for y in range(4):
-#        temp = tk.Text(w, height=10, width=10, bg="white")
+#        temp = Text(w, height=10, width=10, bg="white")
 #        xcord = 0+10*x
 #        ycord = 0+10*y
 #        temp.place(x=xcord, y=ycord)
