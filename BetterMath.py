@@ -1,15 +1,21 @@
 
 import tkinter as tk
+from tkinter.ttk import *
 from PIL import Image,ImageTk
 import math
 import fitz # imports the pymupdf library
 import time
+
 ## Default button bindings
 infinite = "<Shift-i>"
 
 
 ##make window##
 window = tk.Tk()
+
+style = Style(window)
+#print(style.theme_names())
+style.theme_use("clam")
 
 screen_width= window.winfo_screenwidth()               
 screen_height= window.winfo_screenheight()               
@@ -160,17 +166,17 @@ def delete_last_grid():
 def resize_for_save(canvas, frame):
     frame.config(height=1100)
     canvas.config(height=1100)
-
+    window.update()
 #Stolen from the internet <3
 
 def save_as_png(canvas, frame, fileName):
     # save postscipt image 
     print("something worked")
-    resize_for_save(canvas, frame)
-    time.sleep(3)
     canvas.postscript(file = fileName + '.eps') 
     print("done")
-    #frame.config(height=700)
+    frame.config(height=700)
+    canvas.config(height=700)
+    window.update()
     # use PIL to convert to PNG 
     img = Image.open(fileName + '.eps') 
     
@@ -182,29 +188,29 @@ def save_as_png(canvas, frame, fileName):
 
 
 ##menu bar top##
-MenuFrame = tk.Frame(window)
+MenuFrame = Frame(window)
 MenuFrame.place(x=0,y=0)
 file = tk.Button(MenuFrame, text="Delete Last Grid", command=delete_last_grid)
 file.pack(side="left", padx=4)
-Edit = tk.Button(MenuFrame, text="Edit")
+Edit = tk.Button(MenuFrame, text="Open")
 Edit.pack(side="left", padx=4)
-View = tk.Button(MenuFrame, text="Save", command= lambda: save_as_png(worksheet,work_area,"sample"))
+View = tk.Button(MenuFrame, text="Save", command= lambda: [resize_for_save(worksheet,work_area), save_as_png(worksheet,work_area,"sample")])
 View.pack(side="left", padx=4)
-Insert = tk.Button(MenuFrame, text="Insert", command="drawZone")
+Insert = tk.Button(MenuFrame, text="Insert")
 Insert.pack(side="left", padx=4)
 
 ##comand box##
 #Unclear on the functionality of this widget
-CMD = tk.Entry(window)
-CMD.place(x=40,y=30, width=730)
+#CMD = tk.Entry(window)
+#CMD.place(x=40,y=30, width=730)
 
 ##X cords##
-XCords = tk.Frame(window)
-XCords.place(x=64, y=64)
+#XCords = tk.Frame(window)
+#XCords.place(x=64, y=64)
 
-max_x = 28
-max_y = 24
-
+#max_x = 28
+#max_y = 24
+'''
 x = 1
 while x != 29:
     if x < 10:
@@ -222,7 +228,7 @@ while y != 25:
     y1 = tk.Label(YCords,text=f'{y}', justify='center')
     y1.pack(side='top')
     y += 1
-
+'''
 #Work area for the worksheet 
 work_w = 850
 work_h = 700
@@ -235,6 +241,8 @@ work_area.place(x=int(work_w/3), y=100)
 ##Current Grid## 
 #window.wm_attributes('-transparentcolor', '#ab23ff')
 
+
+## No longer needed
 def create_page(x,y,canvas):
   #Starting with a 20x30 grid and adjusting later
   '''work_w = 850
@@ -288,15 +296,31 @@ upcomingZoneY = False
 
 
 
-def toggledrawZone():
-    addArea = not addArea    
+gridInsert = False
+def toggle_grid_insert():
+    global gridInsert
+    print(gridInsert)
+    gridInsert = not gridInsert 
+    if gridInsert:
+        Insert.configure(text = "Stop Inserting")
+    else:
+        Insert.configure(text = "Insert Grid")
+    
+    
+    print(gridInsert)   
 
-def startDraw(event):
+
+#This line helps while the file is a mess, clean up later
+Insert.configure(text = "Insert Grid", command=toggle_grid_insert)
+
+def start_draw(event):
     global upcomingZoneX 
     global upcomingZoneY
     
-    upcomingZoneX = event.x
-    upcomingZoneY = event.y
+    #upcomingZoneX = event.x
+    upcomingZoneX  = worksheet.canvasx(event.x)
+    #upcomingZoneY = event.y
+    upcomingZoneY = worksheet.canvasy(event.y)
 
 
 def draw(event):
@@ -304,21 +328,24 @@ def draw(event):
     color="red"
     x1,y1= (event.x-1), (event.y-1)
     x2,y2= (event.x), (event.y)
-    worksheet.create_oval(x1,y1,x2,y2,fill=color,outline=color)
+    #worksheet.create_oval(x1,y1,x2,y2,fill=color,outline=color)
+    #print(worksheet.canvasx(event.x), worksheet.canvasy(event.y))
 
-def endDraw(event):
+def end_draw(event):
     color="red"
     x1,y1 = upcomingZoneX, upcomingZoneY
-    x2,y2= (event.x), (event.y)
+    #x2,y2= (event.x), (event.y)
+    x2,y2= worksheet.canvasx(event.x), worksheet.canvasy(event.y)
     #if abs(x1-x2) > 20 and abs(y1-y2) > 20:
         #worksheet.create_rectangle(x1,y1,x2,y2, fill=color,outline=color)
-    temp = answerGrid(x1,y1,x2,y2)
-    stored_grids.insert(0,temp)
-    temp.draw(worksheet)
+    if gridInsert:
+        temp = answerGrid(x1,y1,x2,y2)
+        stored_grids.insert(0,temp)
+        temp.draw(worksheet)
 
-worksheet.bind('<Button-1>', startDraw)
-worksheet.bind('<B1-Motion>',draw)
-worksheet.bind('<ButtonRelease-1>', endDraw)
+worksheet.bind('<Button-1>', start_draw)
+worksheet.bind('<B1-Motion>', draw)
+worksheet.bind('<ButtonRelease-1>', end_draw)
 
 
 #Useful Grid Code for future reference
