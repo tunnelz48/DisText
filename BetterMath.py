@@ -1,17 +1,31 @@
-import fitz # imports the pymupdf library
+
 import tkinter as tk
 from PIL import Image,ImageTk
 import math
-
+import fitz # imports the pymupdf library
+import time
 ## Default button bindings
 infinite = "<Shift-i>"
+
+
+##make window##
+window = tk.Tk()
+
+screen_width= window.winfo_screenwidth()               
+screen_height= window.winfo_screenheight()               
+window.geometry("%dx%d" % (screen_width, screen_height))
+
+window.title("DisText")
+#tk.Text(window, justify='center')
+
+
 
 ## Class Answer Grid, Stores all relevant data for a solution/ expression
 
 class answerGrid:
-    thickness = 30
-    height =  48
-    fontsize = 30
+    thickness = 20
+    height =  40
+    fontsize = 25
     row = 0
     col = 0
     
@@ -35,7 +49,7 @@ class answerGrid:
                 for y in x:
                     print(y.tk)'''
         print(event)
-        #god forgive me for this yandere dev if elif nonsense. I hope i figure out a better situation at some opint
+        #god forgive me for this yandere dev if elif nonsense. I hope i figure out a better situation at some point
         #movement section
         if event.char == "a":
             temp = event.widget
@@ -60,12 +74,22 @@ class answerGrid:
             print("backspace")
         elif event.char == "":
             print("special character")
+        elif event.char == '\x16': #ctrl + v
+            event.widget.insert(tk.INSERT, window.clipboard_get())
+            return "break"
         #Symbols Section
         elif event.char == "P":
-            event.widget.insert(tk.INSERT, "π")
+            event.widget.insert(tk.INSERT, "𝝅")
             return "break"
         elif event.char == "R":
             event.widget.insert(tk.INSERT, "√")
+            return "break"
+        elif event.char == '\x06':
+            #print(event.widget.get("1.0",'end-1c'))
+            original_input = event.widget.get('1.0','end-1c')
+            event.widget.delete('1.0', tk.END)
+            event.widget.insert('1.0', f"\u0305{original_input}\u0305")
+            #\u0305
             return "break"
         else:
             event.widget.insert(tk.INSERT, f"{event.char}")
@@ -89,7 +113,10 @@ class answerGrid:
         #aframe.place(x=self.startx, y=self.starty, width=self.fontsize*self.row , height=self.fontsize*self.col)
         for x in range(self.row):
             for y in range(self.col):
-                self.grid[x][y] = tk.Text(canvas, height=1, width=3, bg="white")
+                temp = tk.Text(canvas, height=1, width=1, padx=0, bg="white")
+                self.grid[x][y] = temp 
+                temp.tag_configure("center", justify='center')
+                temp.tag_add("center", 1.0, "end")
                 self.grid[x][y].config(font=('Arial', self.fontsize))
                 #print(str(x),str(y))
                 xcord = self.startx + (self.thickness*x)
@@ -129,25 +156,24 @@ def delete_last_grid():
         stored_grids[0].delete_grid()
         stored_grids.pop(0)
 
-##make window##
-window = tk.Tk()
-
-screen_width= window.winfo_screenwidth()               
-screen_height= window.winfo_screenheight()               
-window.geometry("%dx%d" % (screen_width, screen_height))
-
-window.title("DisText")
-
-
+#this exists to allow tkinter to update
+def resize_for_save(canvas, frame):
+    frame.config(height=1100)
+    canvas.config(height=1100)
 
 #Stolen from the internet <3
 
-def save_as_png(canvas,fileName):
+def save_as_png(canvas, frame, fileName):
     # save postscipt image 
     print("something worked")
+    resize_for_save(canvas, frame)
+    time.sleep(3)
     canvas.postscript(file = fileName + '.eps') 
+    print("done")
+    #frame.config(height=700)
     # use PIL to convert to PNG 
     img = Image.open(fileName + '.eps') 
+    
     img.save(fileName + '.png', 'png') 
     
 
@@ -162,7 +188,7 @@ file = tk.Button(MenuFrame, text="Delete Last Grid", command=delete_last_grid)
 file.pack(side="left", padx=4)
 Edit = tk.Button(MenuFrame, text="Edit")
 Edit.pack(side="left", padx=4)
-View = tk.Button(MenuFrame, text="Save", command= lambda: save_as_png(worksheet,"sample"))
+View = tk.Button(MenuFrame, text="Save", command= lambda: save_as_png(worksheet,work_area,"sample"))
 View.pack(side="left", padx=4)
 Insert = tk.Button(MenuFrame, text="Insert", command="drawZone")
 Insert.pack(side="left", padx=4)
