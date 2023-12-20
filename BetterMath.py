@@ -1,6 +1,7 @@
 
 from tkinter import *
 from tkinter import PhotoImage
+from tkinter import filedialog
 from tkinter.ttk import *
 from PIL import Image,ImageTk
 import math
@@ -178,6 +179,12 @@ class answerGrid:
                 self.grid[x][y].configure(borderwidth=2)
 
 
+# Function for opening the 
+# file explorer window
+filename = "example.png"
+
+
+
 ## An array that holds all the grids so they can be referenced and deleted
 stored_grids = []
 
@@ -199,16 +206,17 @@ def resize_for_save(canvas, frame):
 
 def save_as_png(canvas, frame, fileName):
     # save postscipt image 
-    print("something worked")
+    save_as_filename = filedialog.asksaveasfilename(initialdir = "/")
+    print(save_as_filename)
     canvas.postscript(file = fileName + '.eps') 
-    print("done")
+    
     frame.config(height=700)
     canvas.config(height=700)
     window.update()
     # use PIL to convert to PNG 
     img = Image.open(fileName + '.eps') 
     
-    img.save(fileName + '.png', 'png') 
+    img.save(save_as_filename + '.png', 'png') 
     
 
 
@@ -270,29 +278,8 @@ work_area.place(x=int(work_w/3), y=100)
 #window.wm_attributes('-transparentcolor', '#ab23ff')
 
 
-## No longer needed
-def create_page(x,y,canvas):
-  #Starting with a 20x30 grid and adjusting later
-  '''work_w = 850
-     work_h = 700'''
-  boxes_x = x
-  boxes_y = y
-  canvas = canvas
-  box_width = int((image_w) / boxes_x)
-  box_height = int(image_h / boxes_y)
-
-  for i in range(0, image_w, box_width):
-      canvas.create_line([(i, 0), (i, image_h)],dash = (1, 200), tag='grid_line')
-      print(i)
-  for i in range(0, image_h, box_height):
-      canvas.create_line([(0,i), (image_w, i)], tag='grid_lines')
-
-
-
-
-
 ##Canvas for background image##
-initial_worksheet = (Image.open("example.png"))
+initial_worksheet = (Image.open(filename))
 initial_worksheet=  initial_worksheet.resize((image_w,image_h),Image.LANCZOS)
 worksheet_image = ImageTk.PhotoImage(initial_worksheet)
 
@@ -322,7 +309,29 @@ worksheet.configure(yscrollcommand=scroll.set)
 upcomingZoneX = False
 upcomingZoneY = False
 
-
+def browseFiles(canvas):
+    global filename
+    filename = filedialog.askopenfilename(initialdir = "/",
+                                          title = "Select a File",
+                                          filetypes = (("JPG Image",
+                                                        "*.jpg*"),
+                                                       ("PDF",
+                                                        "*.pdf*"),
+                                                        ("PNG Image",
+                                                        "*.png*")
+                                                        )
+                                            )
+    initial_worksheet = (Image.open(filename))
+    initial_worksheet=  initial_worksheet.resize((image_w,image_h),Image.BICUBIC)
+    global worksheet_image
+    worksheet_image= ImageTk.PhotoImage(initial_worksheet)
+    canvas.create_image(0,0,image=worksheet_image,anchor=NW)
+    #im = Image.open(r"D:\Ethan\Pictures\fuck around 2.png")
+    #ph = ImageTk.PhotoImage(im)
+    #canvas.create_image(0,0,image=ph,anchor=NW)
+      
+    # Change label contents
+    #label_file_explorer.configure(text="File Opened: "+filename)
 
 gridInsert = False
 def toggle_grid_insert():
@@ -340,7 +349,7 @@ def toggle_grid_insert():
 
 #This line helps while the file is a mess, clean up later
 InsertBtn.configure(text = "Insert Grid", command=toggle_grid_insert)
-OpenBtn.configure(command=lambda: stored_grids[0].remove_borders())
+OpenBtn.configure(command=lambda: browseFiles(worksheet))
 def start_draw(event):
     global upcomingZoneX 
     global upcomingZoneY
@@ -409,7 +418,7 @@ window.mainloop()
 
 
 
-doc = fitz.open("example.pdf") # open a document
+doc = fitz.open(filename) # open a document
 for page in doc: # iterate the document pages
   text = page.get_text() # get plain text encoded as UTF-8
 print(text)
